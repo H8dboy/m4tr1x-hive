@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: toolchain
         run: rustup update stable --no-self-update && rustup default stable && cargo --version
       - name: build
-        run: cargo build --locked --all-targets 2>/dev/null || cargo build --all-targets
+        run: cargo build --all-targets
       - name: test
         run: cargo test
       - name: examples (release)
