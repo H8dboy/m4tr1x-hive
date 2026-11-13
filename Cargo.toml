@@ -1,0 +1,15 @@
+[package]
+name = "m4tr1x-celle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-only"
+description = "Hive codec for M4TR1X: images and video on an adaptive hexagonal cell grid. Integer arithmetic only, zero dependencies."
+repository = "https://github.com/H8dboy/m4tr1x-hive"
+
+[dependencies]
+
+[dev-dependencies]
+
+[profile.release]
+debug = false
