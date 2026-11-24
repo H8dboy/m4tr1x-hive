@@ -2,13 +2,14 @@
 
 Images and video on an **adaptive hexagonal cell grid** ("alveare" = hive): the grid follows the picture's complexity
 and, in video, the motion; colour and detail are separate layers; detail arrives in pieces, cell by cell, so a viewer
-on a slow link gets a complete picture first and the fine detail later. Since 16/11/2026 the codec is wired into the M4TR1X app: photos and reels are encoded on the uploader's computer, travel as hash-addressed pieces (`src/pacchetto.rs`) and the viewer sees the whole picture from the first piece. Integer arithmetic only, zero dependencies,
+on a slow link gets a complete picture first and the fine detail later. Since 16/11/2026 the codec is wired into the M4TR1X app: photos and reels are encoded on the uploader's computer, travel as hash-addressed pieces (`src/pacchetto.rs`) and the viewer sees the whole picture from the first piece. Reels encode in parallel, one key-frame group per core (`codifica_reel_parallela`, ×4 on 8 cores), and the viewer keeps only two groups decoded in memory. Integer arithmetic only, zero dependencies,
 written for the [M4TR1X](https://github.com/H8dboy/m4tr1x-v3) decentralised social network. The design note is in
 `docs/VIDEO_A_CELLE.md`; the rest of this README (in Italian) has the measurements against JPEG, x264, VP9 and AV1.
 
-`cargo test` runs the 27 tests; `cargo run --release --example misura_reel -- <folder with frame-NNN.bmp>` measures a clip.
+`cargo test` runs the 29 tests; `cargo run --release --example misura_reel -- <folder with frame-NNN.bmp>` measures a clip.
 
 ---
+
 # m4tr1x-celle — immagini a celle esagonali (foto; seconda versione, 12/11/2026 pomeriggio)
 
 Idea del fondatore (vedi `docs/design/VIDEO_A_CELLE.md`): griglia a celle esagonali con il numero di celle che segue
@@ -175,6 +176,22 @@ firmata (`celle_pubblica`), e all'apertura scarica i pezzi uno per uno via Tor d
 parte (`celle_apri`, `celle_stato`, `celle_quadro`): chi guarda vede la foto intera dal primo pezzo e la vede
 affinarsi; un reel parte dal primo gruppo. Nessun hub ricodifica niente, nessun metadato da ripulire (il formato
 porta solo pixel), e al JavaScript non arriva mai un file: solo pixel.
+
+## Codifica a tratti su più fili (24/11/2026, `examples/misura_parallela.rs`)
+
+`reel::codifica_reel_parallela(fotogrammi, p, fili, avanza)`: con `chiave_ogni` > 0 il reel si taglia in tratti da
+`chiave_ogni` fotogrammi, ognuno parte da una chiave e non guarda gli altri, quindi si codificano insieme (un filo
+per tratto) e si rimettono in fila. Ogni tratto è già un pezzo per la rete. Unica differenza dalla codifica su un
+filo: l'ultimo fotogramma di un tratto diventa un'àncora (bidirezionali fino alla fine del tratto) invece della coda
+in catena prima della chiave dopo. Il risultato non dipende dal numero di fili (provato). L'app la usa in
+`celle_prepara` con tutti i core meno uno.
+
+| scena | un filo | a tratti (8 core) |
+|---|---|---|
+| sintetica 96 fotogrammi 480×360, chiave ogni 24 | 45,6 s · 652.574 B · 29,43 dB | **11,4 s (×4,0)** · 633.697 B (−2,9 %) · 29,41 dB |
+
+Con 4 tratti lavorano 4 fili: il guadagno cresce con la durata (un reel di 30 s a 12 fotogrammi, chiave ogni 48 =
+8 tratti). Da rifare su video veri (le cartelle `reel1`/`reel2` del 13/11 non ci sono più su questo PC).
 
 ## Prossimo
 
